@@ -3,8 +3,6 @@ import {
   faAngleLeft,
   faAngleRight,
   faAnglesRight,
-  faPenToSquare,
-  faBookBookmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { Chess } from "chess.js";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";

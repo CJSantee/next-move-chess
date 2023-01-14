@@ -1,16 +1,16 @@
-import Head from "next/head";
-
-import Position from "../models/Position";
+// Assets
 import { faCircle } from "@fortawesome/free-solid-svg-icons";
-
-import dbConnect from "../lib/dbConnect";
+// Hooks
 import { useState } from "react";
-import Board from "../components/Board";
+// Libararies
 import { Chess } from "chess.js";
-import GamePanel from "../components/GamePanel";
+// Components
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import Head from "next/head";
+import GamePanel from "../components/GamePanel";
+import Board from "../components/Board";
 
-export default function Home({ isConnected, positions }) {
+export default function Home({ isConnected }) {
   const [game, setGame] = useState(new Chess());
 
   const handleMove = async (move) => {};
@@ -44,18 +44,3 @@ export default function Home({ isConnected, positions }) {
     </>
   );
 }
-
-// export async function getServerSideProps() {
-//   try {
-//     await dbConnect();
-
-//     return {
-//       props: { isConnected: true, positions },
-//     };
-//   } catch (e) {
-//     console.error(e);
-//     return {
-//       props: { isConnected: false },
-//     };
-//   }
-// }
