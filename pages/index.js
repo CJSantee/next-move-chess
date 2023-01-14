@@ -44,17 +44,18 @@ export default function Home({ isConnected, positions }) {
     </>
   );
 }
-export async function getServerSideProps() {
-  try {
-    await dbConnect();
 
-    return {
-      props: { isConnected: true, positions },
-    };
-  } catch (e) {
-    console.error(e);
-    return {
-      props: { isConnected: false },
-    };
-  }
-}
+// export async function getServerSideProps() {
+//   try {
+//     await dbConnect();
+
+//     return {
+//       props: { isConnected: true, positions },
+//     };
+//   } catch (e) {
+//     console.error(e);
+//     return {
+//       props: { isConnected: false },
+//     };
+//   }
+// }
