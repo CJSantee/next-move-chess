@@ -48,13 +48,6 @@ export async function getServerSideProps() {
   try {
     await dbConnect();
 
-    const result = await Position.find({}, { __v: 0 });
-    const positions = result.map((doc) => {
-      const position = doc.toObject();
-      position._id = position._id.toString();
-      return position;
-    });
-
     return {
       props: { isConnected: true, positions },
     };
