@@ -10,7 +10,7 @@ import Head from "next/head";
 import GamePanel from "../components/GamePanel";
 import Board from "../components/Board";
 
-export default function Home({ isConnected }) {
+export default function Home() {
   const [game, setGame] = useState(new Chess());
 
   const handleMove = async (move) => {};
@@ -25,18 +25,11 @@ export default function Home({ isConnected }) {
       </Head>
       <main className='vh-100'>
         <div className='row h-100 g-0'>
-          <div className='d-none d-md-flex col-3'></div>
-          <div className='col-12 col-sm-8 col-md-6 d-flex flex-column h-100 justify-content-center align-items-center'>
-            <div
-              className={`d-flex w-100 justify-content-end mb-1 ${
-                isConnected ? "text-success" : "text-danger"
-              }`}
-            >
-              <FontAwesomeIcon icon={faCircle} />
-            </div>
+          <div className='d-none d-md-flex col-2'></div>
+          <div className='col-12 col-sm-8 col-md-7 d-flex flex-column justify-content-center align-items-center max-w-100vh'>
             <Board game={game} setGame={setGame} onMove={handleMove} />
           </div>
-          <div className='col-12  col-sm-4 col-md-3 d-flex justify-content-center align-items-center'>
+          <div className='col-12  col-sm-4 col-md-3 d-flex justify-content-center align-items-center mt-2 flex-fill'>
             <GamePanel game={game} setGame={setGame} />
           </div>
         </div>

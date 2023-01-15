@@ -10,7 +10,13 @@ html,
 }
 
 .board-container {
-  width: calc(100% - 2em);
-  display: flex;
-  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.max-h-100vh {
+  max-height: 100vh;
+}
+.max-w-100vh {
+  max-width: calc(100vh - 2rem);
 }

@@ -1,15 +1,12 @@
+import dbConnect from "../../lib/dbConnect";
 import Position from "../../models/Position";
-// const { fenToPosition } = require("../utils/positions");
+import { fenToPosition } from "../../utils/positions";
 // const { Chess } = require("chess.js");
 
 const filter = { __v: 0 };
 
 // const getAllPositions = async () => {
 //   return await Position.find({}, filter);
-// };
-
-// const getByPosition = async ({ piece_placement, active_color }) => {
-//   return await Position.find({ piece_placement, active_color }, filter);
 // };
 
 // const getRandomAfterBookMove = async (fen, book_moves) => {
@@ -35,10 +32,11 @@ export default async function handler(req, res) {
   switch (method) {
     case "GET":
       try {
-        const positions = await Position.find({}, filter);
-        res.status(200).json({ success: true, data: positions });
+        const { fen } = req.query;
+        const positions = await Position.find(fenToPosition(fen), filter);
+        res.status(200).json(positions);
       } catch (error) {
-        res.status(400).json({ success: false });
+        res.status(400);
       }
       break;
     case "POST":
