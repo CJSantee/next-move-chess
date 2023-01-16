@@ -1,20 +1,39 @@
+// Assets
 import {
   faAnglesLeft,
   faAngleLeft,
   faAngleRight,
   faAnglesRight,
+  faPenToSquare,
+  faBookBookmark,
 } from "@fortawesome/free-solid-svg-icons";
+// Libraries
 import { Chess } from "chess.js";
+// Components
+import OverlayTrigger from "react-bootstrap/OverlayTrigger";
+import Tooltip from "react-bootstrap/Tooltip";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+// Hooks
 import { useState, useEffect } from "react";
-import { getPosition } from "../lib/positions";
+import NamePositionModal from "./NamePositionModal";
 
-function GamePanel({ game, setGame }) {
+function GamePanel({
+  game,
+  setGame,
+  position,
+  setPosition,
+  recording,
+  setRecording,
+  addOverlay,
+  addAlert,
+}) {
   const [moves, setMoves] = useState([]);
   const [history, setHistory] = useState([]);
-  const [position, setPosition] = useState({});
+
+  const [showNameModal, setShowNameModal] = useState(false);
 
   useEffect(() => {
+    // Split history into moves for white and black
     const parsedHistory = game.history().reduce((acc, move, idx) => {
       if (idx % 2 === 0) {
         acc.push({ white: move });
@@ -25,12 +44,6 @@ function GamePanel({ game, setGame }) {
       return acc;
     }, []);
     setMoves(parsedHistory);
-
-    const getPositionFromDB = async () => {
-      const position = await getPosition({ fen: game.fen() });
-      setPosition(position);
-    };
-    getPositionFromDB();
   }, [game]);
 
   /**
@@ -96,6 +109,36 @@ function GamePanel({ game, setGame }) {
       <div className='flex-fill mx-3 my-2'>
         <div className='d-flex justify-content-between align-items-center mb-2 px-1'>
           <p className='text-md fs-5 fw-light m-0'>{position?.name}</p>
+          <div className='d-flex'>
+            <OverlayTrigger
+              placement='top'
+              overlay={<Tooltip>Edit Name</Tooltip>}
+            >
+              <button
+                className='btn p-0 me-1 border-0'
+                onClick={() => setShowNameModal(true)}
+              >
+                <FontAwesomeIcon icon={faPenToSquare} />
+              </button>
+            </OverlayTrigger>
+            <OverlayTrigger
+              placement='top'
+              overlay={<Tooltip>Add book move</Tooltip>}
+            >
+              <button
+                className='btn p-0 ms-1 border-0'
+                disabled={recording}
+                onClick={() => {
+                  setRecording(game.fen());
+                  addOverlay({
+                    message: "Make a move to add to book.",
+                  });
+                }}
+              >
+                <FontAwesomeIcon icon={faBookBookmark} />
+              </button>
+            </OverlayTrigger>
+          </div>
         </div>
         <div className='card p-2'>
           <p>Moves</p>
@@ -156,6 +199,14 @@ function GamePanel({ game, setGame }) {
           </button>
         </div>
       </div>
+      <NamePositionModal
+        show={showNameModal}
+        onHide={() => setShowNameModal(false)}
+        onUpdate={(name) => setPosition({ ...position, name })}
+        position={position}
+        fen={game.fen()}
+        addAlert={addAlert}
+      />
     </>
   );
 }

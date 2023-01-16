@@ -31,24 +31,24 @@ export default async function handler(req, res) {
 
   switch (method) {
     case "GET":
+      const { fen } = req.query;
       try {
-        const { fen } = req.query;
         const positions = await Position.find(fenToPosition(fen), filter);
         res.status(200).json(positions);
       } catch (error) {
-        res.status(400);
+        res.status(500).json({ error: "An unexpected error occurred." });
       }
       break;
     case "POST":
       try {
         const position = await Position.create(req.body);
-        res.status(201).json({ success: true, data: position });
+        res.status(201).json(position);
       } catch (error) {
-        res.status(400).json({ success: false });
+        res.status(400).json({ error: "An unexpected error occurred." });
       }
       break;
     default:
-      res.status(404).json({ success: false });
+      res.status(404).json({ error: "Endpoint not found." });
       break;
   }
 }
