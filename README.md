@@ -34,3 +34,29 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+
+## Project Structure
+
+[Credit: Giancarlo Buomprisco](https://giancarlobuomprisco.com/next/a-scalable-nextjs-project-structure)
+
+### Core
+
+The core layer is where we place everything unrelated to our domain, such as utilities, technical implementations, or API.
+
+For example:
+
+- the functions that connect to the database
+- the utilities that we use to authenticate users
+- the provider to send emails
+- the reusable UI components not related to any domain (ex. Dropdown, Button, TextInput)
+- and more.
+
+### Lib
+
+Primarily business-logic code. Anything about the domain that isn't a component, like:
+
+- queries
+- mutations
+- custom hooks
+- contexts
+- prop functions (getServerSideProps, getInitialProps)

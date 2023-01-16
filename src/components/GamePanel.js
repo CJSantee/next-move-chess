@@ -7,11 +7,11 @@ import {
 import { Chess } from "chess.js";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useState, useEffect } from "react";
-import usePosition from "../hooks/usePosition";
 
 function GamePanel({ game, setGame }) {
   const [moves, setMoves] = useState([]);
   const [history, setHistory] = useState([]);
+  const [position, setPosition] = useState({});
 
   useEffect(() => {
     const parsedHistory = game.history().reduce((acc, move, idx) => {
@@ -88,7 +88,7 @@ function GamePanel({ game, setGame }) {
     <>
       <div className='flex-fill mx-3 my-2'>
         <div className='d-flex justify-content-between align-items-center mb-2 px-1'>
-          <PositionName fen={game.fen()} />
+          <p className='text-md fs-5 fw-light m-0'>{position?.name}</p>
         </div>
         <div className='card p-2'>
           <p>Moves</p>
@@ -152,14 +152,5 @@ function GamePanel({ game, setGame }) {
     </>
   );
 }
-
-const PositionName = ({ fen }) => {
-  const { positions, isLoading } = usePosition({ fen });
-  return (
-    !isLoading && (
-      <p className='text-md fs-5 fw-light m-0'>{positions[0]?.name}</p>
-    )
-  );
-};
 
 export default GamePanel;
