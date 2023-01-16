@@ -3,8 +3,7 @@ import { useEffect, useState } from "react";
 // Components
 import Modal from "react-bootstrap/Modal";
 // Services
-import { updatePositionById } from "../lib/positions";
-// import { postPosition, updatePositionById } from "../../../services/positions"; //TODO: implement
+import { updatePositionById, postPosition } from "../lib/positions";
 // Utils
 import { fenToPosition } from "../lib/utils/positions";
 
@@ -28,20 +27,19 @@ function NamePositionModal({
   };
 
   const submit = async () => {
-    if (position?._id) {
-      const { position: dbPosition, success } = await updatePositionById({
-        id: position._id,
-        name,
+    const { position: dbPosition, success } = position?._id
+      ? await updatePositionById({ id: position._id, name })
+      : await postPosition({ ...fenToPosition(fen), name });
+    if (success) {
+      addAlert({
+        type: "success",
+        message: position?._id
+          ? "Position successfully updated!"
+          : "Position added to book!",
+        timeout: 1000,
       });
-      if (success) {
-        addAlert({
-          type: "success",
-          message: "Position successfully updated!",
-          timeout: 1000,
-        });
-        onUpdate(dbPosition.name);
-        onHide();
-      }
+      onUpdate(dbPosition.name);
+      onHide();
     }
   };
 

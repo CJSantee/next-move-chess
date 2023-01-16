@@ -30,6 +30,8 @@ export const getPosition = async ({ fen }) => {
   return position;
 };
 
+// TODO: Update positions in cache on update and post
+
 /**
  * @description updates a position given it's id
  * @param {object} position
@@ -46,6 +48,26 @@ export const updatePositionById = async ({ id, name }) => {
   }
   return {
     position,
+    success,
+  };
+};
+
+/**
+ * @description Post a new position to the database
+ * @param {object} position
+ * @returns {object} {position, success}
+ */
+export const postPosition = async (position) => {
+  const {
+    data: dbPosition,
+    success,
+    error,
+  } = await api.post("/positions", position);
+  if (error) {
+    console.error(error);
+  }
+  return {
+    position: dbPosition,
     success,
   };
 };
