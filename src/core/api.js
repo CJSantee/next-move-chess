@@ -1,5 +1,3 @@
-import useSWR from "swr";
-
 const API_URL = "/api";
 
 const NETWORK_ERROR = {

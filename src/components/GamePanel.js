@@ -7,6 +7,7 @@ import {
 import { Chess } from "chess.js";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useState, useEffect } from "react";
+import { getPosition } from "../lib/positions";
 
 function GamePanel({ game, setGame }) {
   const [moves, setMoves] = useState([]);
@@ -24,6 +25,12 @@ function GamePanel({ game, setGame }) {
       return acc;
     }, []);
     setMoves(parsedHistory);
+
+    const getPositionFromDB = async () => {
+      const position = await getPosition({ fen: game.fen() });
+      setPosition(position);
+    };
+    getPositionFromDB();
   }, [game]);
 
   /**

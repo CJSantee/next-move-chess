@@ -1,6 +1,6 @@
-import dbConnect from "../../lib/dbConnect";
-import Position from "../../models/Position";
-import { fenToPosition } from "../../utils/positions";
+import dbConnect from "../../core/dbConnect";
+import Position from "../../lib/models/Position";
+import { fenToPosition } from "../../lib/utils/positions";
 // const { Chess } = require("chess.js");
 
 const filter = { __v: 0 };
