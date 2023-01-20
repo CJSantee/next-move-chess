@@ -66,7 +66,7 @@ export default function Home() {
       <main className='vh-100'>
         <div className='row h-100 g-0'>
           <div className='d-none d-md-flex col-2'></div>
-          <div className='col-12 col-sm-8 col-md-7 d-flex flex-column justify-content-center align-items-center max-w-100vh'>
+          <div className='col-12 col-sm-8 col-md-7 d-flex flex-column justify-content-center align-items-center w-board'>
             <div className='d-flex w-100 justify-content-center justify-content-md-start px-2 px-md-0 my-2'>
               <p className='fs-5 m-0'>{position?.name}</p>
             </div>

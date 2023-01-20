@@ -17,8 +17,8 @@ html,
 .max-h-100vh {
   max-height: 100vh;
 }
-.max-w-100vh {
-  max-width: calc(100vh - 2rem);
+.w-board {
+  max-width: calc(100vh - 10rem);
 }
 
 .overlay {

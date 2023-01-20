@@ -121,6 +121,11 @@ function GamePanel({
                 <FontAwesomeIcon icon={faPenToSquare} />
               </button>
             </OverlayTrigger>
+          </div>
+        </div>
+        <div className='card p-2'>
+          <div className='d-flex justify-content-between align-items-center pt-1 pb-3'>
+            <p className='m-0'>Book Moves</p>
             <OverlayTrigger
               placement='top'
               overlay={<Tooltip>Add book move</Tooltip>}
@@ -139,52 +144,17 @@ function GamePanel({
               </button>
             </OverlayTrigger>
           </div>
-        </div>
-        <div className='card p-2'>
-          <p>Moves</p>
           <div className='h-100px overflow-auto hide-scrollbar'>
             <table className='table table-striped'>
               <tbody>
-                {moves.map((move, idx) => (
+                {position?.book_moves?.map((move, idx) => (
                   <tr key={idx}>
-                    <td>{`${idx + 1}.`}</td>
-                    <td>{move.white}</td>
-                    <td>{move?.black}</td>
+                    <td>{move}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </div>
-        <div className='d-flex justify-content-between'>
-          <button
-            className='btn btn-primary mt-2'
-            onClick={moveStart}
-            disabled={!moves.length}
-          >
-            <FontAwesomeIcon icon={faAnglesLeft} />
-          </button>
-          <button
-            className='btn btn-primary mt-2'
-            onClick={moveBack}
-            disabled={!moves.length}
-          >
-            <FontAwesomeIcon icon={faAngleLeft} />
-          </button>
-          <button
-            className='btn btn-primary mt-2'
-            onClick={moveForward}
-            disabled={!history.length}
-          >
-            <FontAwesomeIcon icon={faAngleRight} />
-          </button>
-          <button
-            className='btn btn-primary mt-2'
-            onClick={moveEnd}
-            disabled={!history.length}
-          >
-            <FontAwesomeIcon icon={faAnglesRight} />
-          </button>
         </div>
         <div className='d-flex flex-column'>
           <button
