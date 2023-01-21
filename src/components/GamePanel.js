@@ -1,9 +1,9 @@
 // Assets
 import {
-  faAnglesLeft,
-  faAngleLeft,
-  faAngleRight,
-  faAnglesRight,
+  faArrowsUpDown,
+  faCircleChevronUp,
+  faCircleChevronDown,
+  faCheck,
   faPenToSquare,
   faBookBookmark,
 } from "@fortawesome/free-solid-svg-icons";
@@ -16,6 +16,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 // Hooks
 import { useState, useEffect } from "react";
 import NamePositionModal from "./NamePositionModal";
+import ConfirmModal from "./ConfirmModal";
+import { updatePositionById } from "../lib/positions";
 
 function GamePanel({
   game,
@@ -27,81 +29,53 @@ function GamePanel({
   addOverlay,
   addAlert,
 }) {
-  const [moves, setMoves] = useState([]);
-  const [history, setHistory] = useState([]);
-
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showNameModal, setShowNameModal] = useState(false);
+  const [reordering, setReordering] = useState(false);
+  const [bookMoves, setBookMoves] = useState(position.book_moves || []);
 
   useEffect(() => {
-    // Split history into moves for white and black
-    const parsedHistory = game.history().reduce((acc, move, idx) => {
-      if (idx % 2 === 0) {
-        acc.push({ white: move });
-      } else {
-        const lastMove = acc[acc.length - 1];
-        acc[acc.length - 1] = { ...lastMove, black: move };
-      }
-      return acc;
-    }, []);
-    setMoves(parsedHistory);
-  }, [game]);
+    if (position.book_moves) {
+      setBookMoves(position.book_moves);
+    }
+  }, [position]);
 
-  /**
-   * @description Undo the last half move
-   */
-  const moveBack = () => {
-    const gameCopy = new Chess();
-    gameCopy.loadPgn(game.pgn());
-    const move = gameCopy.undo();
-    const historyCopy = [...history];
-    historyCopy.push(move);
-    setHistory(historyCopy);
-    setGame(gameCopy);
-  };
-  /**
-   * @description Undo all previous half moves
-   */
-  const moveStart = () => {
-    const gameCopy = new Chess();
-    gameCopy.loadPgn(game.pgn());
-    const historyCopy = [...history];
-    const numHalfMoves = game.history().length;
-    for (let i = 0; i < numHalfMoves; i++) {
-      const move = gameCopy.undo();
-      historyCopy.push(move);
+  const reorderUp = (index) => {
+    if (index === 0) {
+      return;
     }
-    setHistory(historyCopy);
-    setGame(gameCopy);
+    const bookMovesCopy = [...bookMoves];
+    const temp = bookMovesCopy[index - 1];
+    bookMovesCopy[index - 1] = bookMovesCopy[index];
+    bookMovesCopy[index] = temp;
+    setBookMoves(bookMovesCopy);
   };
-  /**
-   * @description Redo last half move
-   */
-  const moveForward = () => {
-    const historyCopy = [...history];
-    const move = historyCopy.pop();
-    setHistory(historyCopy);
-    const gameCopy = new Chess();
-    gameCopy.loadPgn(game.pgn());
-    gameCopy.move(move);
-    setGame(gameCopy);
-  };
-  /**
-   * @description Redo all half moves
-   */
-  const moveEnd = () => {
-    const gameCopy = new Chess();
-    while (history.length) {
-      const move = history.pop();
-      gameCopy.move(move);
+
+  const reorderDown = (index) => {
+    if (index === bookMoves.length - 1) {
+      return;
     }
-    setHistory([]);
-    setGame(gameCopy);
+    const bookMovesCopy = [...bookMoves];
+    const temp = bookMovesCopy[index + 1];
+    bookMovesCopy[index + 1] = bookMovesCopy[index];
+    bookMovesCopy[index] = temp;
+    setBookMoves(bookMovesCopy);
+  };
+
+  const savePositionChanges = async () => {
+    const { success } = await updatePositionById({
+      id: position?._id,
+      book_moves: bookMoves,
+    });
+    if (success) {
+      setShowConfirmModal(false);
+      setReordering(false);
+    }
   };
 
   const resetBoard = () => {
     const newGame = new Chess();
     setGame(newGame);
-    setHistory([]);
   };
 
   return (
@@ -126,30 +100,79 @@ function GamePanel({
         <div className='card p-2'>
           <div className='d-flex justify-content-between align-items-center pt-1 pb-3'>
             <p className='m-0'>Book Moves</p>
-            <OverlayTrigger
-              placement='top'
-              overlay={<Tooltip>Add book move</Tooltip>}
-            >
-              <button
-                className='btn p-0 ms-1 border-0'
-                disabled={recording}
-                onClick={() => {
-                  setRecording(game.fen());
-                  addOverlay({
-                    message: "Make a move to add to book.",
-                  });
-                }}
+            <div className='d-flex'>
+              {reordering ? (
+                <OverlayTrigger
+                  placement='top'
+                  overlay={<Tooltip>Save changes</Tooltip>}
+                >
+                  <button
+                    className='btn p-0 me-1 border-0'
+                    onClick={() => {
+                      setShowConfirmModal(true);
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faCheck} />
+                  </button>
+                </OverlayTrigger>
+              ) : (
+                <OverlayTrigger
+                  placement='top'
+                  overlay={<Tooltip>Reorder Book Moves</Tooltip>}
+                >
+                  <button
+                    className='btn p-0 me-1 border-0'
+                    onClick={() => {
+                      setReordering(true);
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faArrowsUpDown} />
+                  </button>
+                </OverlayTrigger>
+              )}
+              <OverlayTrigger
+                placement='top'
+                overlay={<Tooltip>Add Book Move</Tooltip>}
               >
-                <FontAwesomeIcon icon={faBookBookmark} />
-              </button>
-            </OverlayTrigger>
+                <button
+                  className='btn p-0 ms-1 border-0'
+                  disabled={recording}
+                  onClick={() => {
+                    setRecording(game.fen());
+                    addOverlay({
+                      message: "Make a move to add to book.",
+                    });
+                  }}
+                >
+                  <FontAwesomeIcon icon={faBookBookmark} />
+                </button>
+              </OverlayTrigger>
+            </div>
           </div>
-          <div className='h-100px overflow-auto hide-scrollbar'>
+          <div className='h-200px overflow-auto hide-scrollbar'>
             <table className='table table-striped'>
               <tbody>
-                {position?.book_moves?.map((move, idx) => (
-                  <tr key={idx}>
-                    <td>{move}</td>
+                {bookMoves.map((move, idx) => (
+                  <tr key={`book_move-${idx}`}>
+                    <td className='d-flex justify-content-between align-items-center'>
+                      {move}
+                      {reordering && (
+                        <div className='d-flex'>
+                          <button
+                            className='btn p-0 me-1 border-0'
+                            onClick={() => reorderUp(idx)}
+                          >
+                            <FontAwesomeIcon icon={faCircleChevronUp} />
+                          </button>
+                          <button
+                            className='btn p-0 ms-1 border-0'
+                            onClick={() => reorderDown(idx)}
+                          >
+                            <FontAwesomeIcon icon={faCircleChevronDown} />
+                          </button>
+                        </div>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -169,6 +192,18 @@ function GamePanel({
           </button>
         </div>
       </div>
+      <ConfirmModal
+        show={showConfirmModal}
+        onHide={() => {
+          setShowConfirmModal(false);
+          setReordering(false);
+        }}
+        title={"Are you sure?"}
+        bodyText={"Click confirm to save updated order of Book Moves."}
+        confirmText={"Confirm"}
+        onConfirm={savePositionChanges}
+        closeBtn
+      />
       <NamePositionModal
         show={showNameModal}
         onHide={() => setShowNameModal(false)}

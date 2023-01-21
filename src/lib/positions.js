@@ -9,7 +9,11 @@ const cache = new Map();
  * @returns {object} position
  */
 export const getPosition = async ({ fen }) => {
-  const queryString = fen ? `?fen=${fen}` : "";
+  let queryString = "";
+  if (fen) {
+    const shortenedFen = fen.split(" ").slice(0, 2).join(" ");
+    queryString = `?fen=${shortenedFen}`;
+  }
   const uri = `/positions${queryString}`;
 
   const cached = cache.get(uri);
@@ -30,24 +34,29 @@ export const getPosition = async ({ fen }) => {
   return position;
 };
 
-// TODO: Update positions in cache on update and post
-
 /**
  * @description updates a position given it's id
  * @param {object} position
  * @returns {object} {position, success}
  */
-export const updatePositionById = async ({ id, name }) => {
+export const updatePositionById = async ({ id, name, book_moves }) => {
   const {
-    data: position,
+    data: dbPosition,
     success,
     error,
-  } = await api.patch(`/position/${id}`, { name });
+  } = await api.patch(`/position/${id}`, { name, book_moves });
   if (error) {
     console.error(error);
   }
+  if (success) {
+    const uri = `/positions?fen=${[
+      dbPosition.piece_placement,
+      dbPosition.active_color,
+    ].join(" ")}`;
+    cache.set(uri, dbPosition);
+  }
   return {
-    position,
+    position: dbPosition,
     success,
   };
 };
@@ -65,6 +74,13 @@ export const postPosition = async (position) => {
   } = await api.post("/positions", position);
   if (error) {
     console.error(error);
+  }
+  if (success) {
+    const uri = `/positions?fen=${[
+      dbPosition.piece_placement,
+      dbPosition.active_color,
+    ].join(" ")}`;
+    cache.set(uri, dbPosition);
   }
   return {
     position: dbPosition,

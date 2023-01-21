@@ -1,4 +1,4 @@
-$heights: (100);
+$heights: (100, 200);
 @each $height in $heights {
   .h-#{$height}px {
     height: #{$height}px;

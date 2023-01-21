@@ -1,16 +1,13 @@
-// Assets
-import { faCircle } from "@fortawesome/free-solid-svg-icons";
 // Hooks
 import { useEffect, useState } from "react";
 // Libararies
 import { Chess } from "chess.js";
 // Components
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Head from "next/head";
 import GamePanel from "../components/GamePanel";
 import Board from "../components/Board";
 // Services
-import { getPosition } from "../lib/positions";
+import { getPosition, updatePositionById } from "../lib/positions";
 import History from "../components/History";
 
 export default function Home() {
@@ -24,14 +21,21 @@ export default function Home() {
 
   useEffect(() => {
     const getPositionFromDB = async () => {
-      const position = await getPosition({ fen: game.fen() });
-      setPosition(position);
+      const dbPosition = await getPosition({ fen: game.fen() });
+      setPosition(dbPosition || {});
     };
     getPositionFromDB();
   }, [game]);
 
   const handleMove = async (move) => {
+    const { san } = move;
     if (recording) {
+      if (position._id && !position.book_moves.includes(san)) {
+        await updatePositionById({
+          id: position._id,
+          book_moves: [...position.book_moves, san],
+        });
+      }
       setRecording(false);
     }
     setOverlay(null);
