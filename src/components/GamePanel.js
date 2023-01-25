@@ -4,20 +4,19 @@ import {
   faCircleChevronUp,
   faCircleChevronDown,
   faCheck,
+  faTrash,
   faPenToSquare,
   faBookBookmark,
 } from "@fortawesome/free-solid-svg-icons";
-// Libraries
-import { Chess } from "chess.js";
 // Components
 import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import Tooltip from "react-bootstrap/Tooltip";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import ConfirmModal from "./ConfirmModal";
 // Hooks
 import { useState, useEffect } from "react";
-import NamePositionModal from "./NamePositionModal";
-import ConfirmModal from "./ConfirmModal";
-import { updatePositionById } from "../lib/positions";
+// Services
+import { updatePositionById, postPosition } from "../lib/positions";
 
 function GamePanel({
   game,
@@ -29,14 +28,15 @@ function GamePanel({
   addOverlay,
   addAlert,
 }) {
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [showNameModal, setShowNameModal] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(null);
   const [reordering, setReordering] = useState(false);
   const [bookMoves, setBookMoves] = useState(position.book_moves || []);
 
   useEffect(() => {
     if (position.book_moves) {
       setBookMoves(position.book_moves);
+    } else {
+      setBookMoves([]);
     }
   }, [position]);
 
@@ -62,41 +62,32 @@ function GamePanel({
     setBookMoves(bookMovesCopy);
   };
 
+  const removeBookMove = async () => {
+    const bookMovesCopy = [...bookMoves];
+    bookMovesCopy.splice(confirmDelete, 1);
+    await updatePositionById({ id: position?._id, book_moves: bookMovesCopy });
+    setBookMoves(bookMovesCopy);
+    setConfirmDelete(null);
+  };
+
   const savePositionChanges = async () => {
     const { success } = await updatePositionById({
       id: position?._id,
       book_moves: bookMoves,
     });
-    if (success) {
-      setShowConfirmModal(false);
-      setReordering(false);
-    }
-  };
-
-  const resetBoard = () => {
-    const newGame = new Chess();
-    setGame(newGame);
+    setReordering(false);
+    return success;
   };
 
   return (
     <>
       <div className='flex-fill mx-3 my-2'>
-        <div className='d-flex justify-content-between align-items-center mb-2 px-1'>
-          <p className='text-md fs-5 fw-light m-0'>{position?.name}</p>
-          <div className='d-flex'>
-            <OverlayTrigger
-              placement='top'
-              overlay={<Tooltip>Edit Name</Tooltip>}
-            >
-              <button
-                className='btn p-0 me-1 border-0'
-                onClick={() => setShowNameModal(true)}
-              >
-                <FontAwesomeIcon icon={faPenToSquare} />
-              </button>
-            </OverlayTrigger>
-          </div>
-        </div>
+        <PositionName
+          position={position}
+          onUpdate={(name) => setPosition({ ...position, name })}
+          addAlert={addAlert}
+          fen={game.fen()}
+        />
         <div className='card p-2'>
           <div className='d-flex justify-content-between align-items-center pt-1 pb-3'>
             <p className='m-0'>Book Moves</p>
@@ -108,9 +99,7 @@ function GamePanel({
                 >
                   <button
                     className='btn p-0 me-1 border-0'
-                    onClick={() => {
-                      setShowConfirmModal(true);
-                    }}
+                    onClick={savePositionChanges}
                   >
                     <FontAwesomeIcon icon={faCheck} />
                   </button>
@@ -156,19 +145,28 @@ function GamePanel({
                   <tr key={`book_move-${idx}`}>
                     <td className='d-flex justify-content-between align-items-center'>
                       {move}
-                      {reordering && (
+                      {reordering ? (
                         <div className='d-flex'>
                           <button
-                            className='btn p-0 me-1 border-0'
+                            className='btn px-1 py-0 border-0'
                             onClick={() => reorderUp(idx)}
                           >
                             <FontAwesomeIcon icon={faCircleChevronUp} />
                           </button>
                           <button
-                            className='btn p-0 ms-1 border-0'
+                            className='btn px-1 py-0 border-0'
                             onClick={() => reorderDown(idx)}
                           >
                             <FontAwesomeIcon icon={faCircleChevronDown} />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className='d-flex'>
+                          <button
+                            className='btn p-0 border-0'
+                            onClick={() => setConfirmDelete(idx)}
+                          >
+                            <FontAwesomeIcon icon={faTrash} />
                           </button>
                         </div>
                       )}
@@ -179,41 +177,95 @@ function GamePanel({
             </table>
           </div>
         </div>
-        <div className='d-flex flex-column'>
-          <button
-            className='btn btn-primary mt-2'
-            onClick={resetBoard}
-            disabled={
-              game.fen() ===
-              "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-            }
-          >
-            Reset
-          </button>
-        </div>
+        <div className='d-flex flex-column'></div>
       </div>
       <ConfirmModal
-        show={showConfirmModal}
+        show={confirmDelete}
         onHide={() => {
-          setShowConfirmModal(false);
-          setReordering(false);
+          setConfirmDelete(null);
         }}
         title={"Are you sure?"}
-        bodyText={"Click confirm to save updated order of Book Moves."}
+        bodyText={`Click confirm to remove ${
+          position?.book_moves?.[confirmDelete] || "move"
+        } from Book Moves.`}
         confirmText={"Confirm"}
-        onConfirm={savePositionChanges}
-        closeBtn
-      />
-      <NamePositionModal
-        show={showNameModal}
-        onHide={() => setShowNameModal(false)}
-        onUpdate={(name) => setPosition({ ...position, name })}
-        position={position}
-        fen={game.fen()}
-        addAlert={addAlert}
+        onConfirm={removeBookMove}
+        cancelBtn
       />
     </>
   );
 }
+
+const PositionName = ({ position, addAlert, onUpdate, fen }) => {
+  const [editing, setEditing] = useState(false);
+  const [name, setName] = useState(position?.name || "");
+
+  useEffect(() => {
+    setName(position?.name);
+  }, [position]);
+
+  const onChange = (e) => {
+    const { value } = e.target;
+    setName(value);
+  };
+
+  const submit = async () => {
+    const { position: dbPosition, success } = position?._id
+      ? await updatePositionById({ id: position._id, name })
+      : await postPosition({ ...fenToPosition(fen), name });
+    if (success) {
+      addAlert({
+        type: "success",
+        message: position?._id
+          ? "Position successfully updated!"
+          : "Position added to book!",
+        timeout: 1000,
+      });
+      onUpdate(dbPosition.name);
+      setEditing(false);
+    }
+  };
+
+  if (editing) {
+    return (
+      <div className='input-group mb-2'>
+        <input
+          type='text'
+          className='form-control'
+          value={name}
+          onChange={onChange}
+        />
+        <button
+          className='btn btn-outline-secondary'
+          onClick={() => setEditing(false)}
+        >
+          Cancel
+        </button>
+        <button
+          className='btn btn-outline-primary'
+          type='button'
+          onClick={submit}
+        >
+          Update
+        </button>
+      </div>
+    );
+  }
+  return (
+    <div className='d-flex justify-content-between align-items-center mb-2 px-1'>
+      <p className='text-md fs-5 fw-light m-0'>{position?.name}</p>
+      <div className='d-flex'>
+        <OverlayTrigger placement='top' overlay={<Tooltip>Edit Name</Tooltip>}>
+          <button
+            className='btn p-0 me-1 border-0'
+            onClick={() => setEditing(true)}
+          >
+            <FontAwesomeIcon icon={faPenToSquare} />
+          </button>
+        </OverlayTrigger>
+      </div>
+    </div>
+  );
+};
 
 export default GamePanel;

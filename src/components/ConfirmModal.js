@@ -8,18 +8,18 @@ export default function ConfirmModal({
   bodyText,
   confirmText,
   onConfirm,
-  closeBtn,
+  cancelBtn,
 }) {
   return (
-    <Modal show={show} onHide={onHide}>
+    <Modal show={show} fullscreen={"md-down"} onHide={onHide}>
       <Modal.Header closeButton>
         <Modal.Title>{title}</Modal.Title>
       </Modal.Header>
       <Modal.Body>{bodyText}</Modal.Body>
       <Modal.Footer>
-        {closeBtn && (
+        {cancelBtn && (
           <button className='btn btn-secondary' onClick={onHide}>
-            Close
+            Cancel
           </button>
         )}
         <button className='btn btn-primary' onClick={onConfirm}>
