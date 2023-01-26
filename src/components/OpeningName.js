@@ -7,15 +7,24 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 // Hooks
 import { useState, useEffect } from "react";
 // Services
-import { updatePositionById, postPosition } from "../lib/positions";
+import { getOpening, postOpening, updateOpeningById } from "../lib/openings";
+import { getMovesFromGame } from "../lib/utils/moves";
+import { shortenFen } from "../lib/utils/positions";
 
-export default function PositionName({ position, addAlert, onUpdate, fen }) {
+export default function OpeningName({ game, addAlert }) {
   const [editing, setEditing] = useState(false);
-  const [name, setName] = useState(position?.name || "");
+  const [opening, setOpening] = useState(null);
+  const [name, setName] = useState("");
 
   useEffect(() => {
-    setName(position?.name);
-  }, [position]);
+    const getOpeningFromDB = async () => {
+      const dbOpening = await getOpening({ fen: game.fen() });
+      setName(dbOpening?.name);
+      setOpening(dbOpening);
+      console.log(dbOpening);
+    };
+    getOpeningFromDB();
+  }, [game]);
 
   /**
    * @description Change handler for input
@@ -27,23 +36,25 @@ export default function PositionName({ position, addAlert, onUpdate, fen }) {
   };
 
   /**
-   * @description If position already exists, update the name, otherwise create a new position.
+   * @description If opening already exists, update the name, otherwise create a new opening.
    */
   const submit = async () => {
-    const { position: dbPosition, success } = position?._id
-      ? await updatePositionById({ id: position._id, name })
-      : await postPosition({ ...fenToPosition(fen), name });
-    if (success) {
-      addAlert({
-        type: "success",
-        message: position?._id
-          ? "Position successfully updated!"
-          : "Position added to book!",
-        timeout: 1000,
+    if (opening?._id) {
+      const { success, opening: dbOpening } = await updateOpeningById({
+        id: opening._id,
+        name,
       });
-      onUpdate(dbPosition.name);
-      setEditing(false);
+      setName(dbOpening.name);
+    } else {
+      const newOpening = {
+        name,
+        moves: getMovesFromGame(game),
+        fen: shortenFen(game.fen()),
+      };
+      const { success, opening: dbOpening } = await postOpening(newOpening);
+      setOpening(dbOpening);
     }
+    setEditing(false);
   };
 
   if (editing) {
@@ -73,11 +84,11 @@ export default function PositionName({ position, addAlert, onUpdate, fen }) {
   }
   return (
     <div className='d-flex w-100 justify-content-between align-items-center mb-2 px-1'>
-      <p className='text-md fs-5 fw-light m-0'>{position?.name}</p>
+      <p className='text-md fs-5 fw-light m-0'>{name}</p>
       <div className='d-flex'>
         <OverlayTrigger
           placement='top'
-          overlay={<Tooltip>Edit Position Name</Tooltip>}
+          overlay={<Tooltip>Edit Opening Name</Tooltip>}
         >
           <button
             className='btn p-0 me-1 border-0'

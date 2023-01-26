@@ -9,6 +9,9 @@ import Board from "../components/Board";
 import History from "../components/History";
 // Services
 import { getPosition, updatePositionById } from "../lib/positions";
+import { getAllOpenings, updateOpeningById } from "../lib/openings";
+import PositionName from "../components/PositionName";
+import { shortenFen } from "../lib/utils/positions";
 
 export default function Home() {
   const [game, setGame] = useState(new Chess());
@@ -28,6 +31,10 @@ export default function Home() {
     getPositionFromDB();
   }, [game]);
 
+  /**
+   * @description Runs after every move
+   * @param {object} move Chess.js move
+   */
   const handleMove = async (move) => {
     const { san } = move;
     if (recording) {
@@ -96,10 +103,17 @@ export default function Home() {
       </Head>
       <main className='vh-100'>
         <div className='row h-100 g-0'>
-          <div className='d-none d-md-flex col-2'></div>
+          <div className='d-none d-md-flex col-2'>
+            <OpeningsList game={game} setGame={setGame} />
+          </div>
           <div className='col-12 col-sm-8 col-md-7 d-flex flex-column justify-content-center align-items-center w-board'>
             <div className='d-flex w-100 justify-content-center justify-content-md-start px-2 px-md-0 my-2'>
-              <p className='fs-5 m-0'>{position?.name}</p>
+              <PositionName
+                position={position}
+                addAlert={addAlert}
+                onUpdate={(name) => setPosition({ ...position, name })}
+                fen={game.fen()}
+              />
             </div>
             <Board game={game} setGame={setGame} onMove={handleMove} />
             <History game={game} setGame={setGame} />
@@ -126,18 +140,59 @@ export default function Home() {
           </div>
         </div>
       )}
-      {alerts.length && (
-        <div className='overlay flex-column justify-content-start align-items-center'>
-          {alerts.map((alert, idx) => (
-            <div
-              key={`alert-${idx}`}
-              className={`bg-${alert.type} d-flex align-items-center p-2 rounded my-2 bg-opacity-75`}
-            >
-              <p className='m-0 p-0'>{`${alert.message}`}</p>
-            </div>
-          ))}
-        </div>
-      )}
+      <div className='overlay flex-column justify-content-start align-items-center'>
+        {alerts.map((alert, idx) => (
+          <div
+            key={`alert-${idx}`}
+            className={`bg-${alert.type} d-flex align-items-center p-2 rounded my-2 bg-opacity-75`}
+          >
+            <p className='m-0 p-0'>{`${alert.message}`}</p>
+          </div>
+        ))}
+      </div>
     </>
   );
 }
+
+const OpeningsList = ({ game, setGame }) => {
+  const [openings, setOpenings] = useState([]);
+
+  useEffect(() => {
+    const getOpeningsFromDB = async () => {
+      const dbOpenings = await getAllOpenings();
+      setOpenings(dbOpenings);
+    };
+    getOpeningsFromDB();
+  }, []);
+
+  const selectOpening = (index) => {
+    const opening = openings[index];
+    const newGame = new Chess();
+    opening.moves.forEach((move) => {
+      const { white, black } = move;
+      newGame.move(white);
+      if (black) {
+        newGame.move(black);
+      }
+    });
+    setGame(newGame);
+  };
+
+  return (
+    <div className='d-flex flex-column justify-content-center mx-2'>
+      <h3 className='fs-5'>Openings</h3>
+      <ul className='list-group'>
+        {openings.map((opening, index) => (
+          <li
+            key={`opening-${index}`}
+            className='list-group-item cursor-pointer hover-underline'
+            onClick={() => selectOpening(index)}
+          >
+            {opening.name}
+          </li>
+        ))}
+      </ul>
+      <button className='btn btn-outline-primary mt-2'>New</button>
+    </div>
+  );
+};

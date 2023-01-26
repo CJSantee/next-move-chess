@@ -12,6 +12,7 @@ import Tooltip from "react-bootstrap/Tooltip";
 import { useEffect, useState } from "react";
 // Libraries
 import { Chess } from "chess.js";
+import { getMovesFromGame } from "../lib/utils/moves";
 
 export default function History({ game, setGame }) {
   const [moves, setMoves] = useState([]);
@@ -19,15 +20,7 @@ export default function History({ game, setGame }) {
 
   useEffect(() => {
     // Split history into moves for white and black
-    const parsedHistory = game.history().reduce((acc, move, idx) => {
-      if (idx % 2 === 0) {
-        acc.push({ white: move });
-      } else {
-        const lastMove = acc[acc.length - 1];
-        acc[acc.length - 1] = { ...lastMove, black: move };
-      }
-      return acc;
-    }, []);
+    const parsedHistory = getMovesFromGame(game);
     setMoves(parsedHistory);
   }, [game]);
 
