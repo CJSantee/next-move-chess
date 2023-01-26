@@ -6,15 +6,16 @@ import { Chess } from "chess.js";
 import Head from "next/head";
 import GamePanel from "../components/GamePanel";
 import Board from "../components/Board";
+import History from "../components/History";
 // Services
 import { getPosition, updatePositionById } from "../lib/positions";
-import History from "../components/History";
 
 export default function Home() {
   const [game, setGame] = useState(new Chess());
   const [position, setPosition] = useState({});
 
   const [recording, setRecording] = useState(false);
+  const [studying, setStudying] = useState(null);
 
   const [alerts, setAlerts] = useState([]);
   const [overlay, setOverlay] = useState(null);
@@ -37,11 +38,37 @@ export default function Home() {
         });
       }
       setRecording(false);
+    } else if (studying) {
+      if (san === studying) {
+        addAlert({ type: "success", message: "Correct!", timeout: 1000 });
+      } else {
+        addAlert({ type: "danger", message: "Incorrect move!", timeout: 3000 });
+      }
     }
     setOverlay(null);
   };
 
-  const addAlert = () => {};
+  /**
+   * @description Adds an alert to the top of the screen
+   * TODO: After timeout remove one alert instead of all.
+   * @param {object} alert
+   * @param {string} alert.type
+   * @param {string} alert.message
+   * @param {number} alert.timeout in ms
+   */
+  const addAlert = ({ type, message, timeout }) => {
+    const removeAlert = () => {
+      setAlerts([]);
+    };
+    const alertsCopy = [...alerts];
+    alertsCopy.push({ type, message });
+    setAlerts(alertsCopy);
+    if (timeout) {
+      setTimeout(removeAlert, timeout);
+    } else {
+      setTimeout(removeAlert, 10000);
+    }
+  };
 
   /**
    * @description Adds an overlay message to the page
@@ -85,6 +112,7 @@ export default function Home() {
               setPosition={setPosition}
               recording={recording}
               setRecording={setRecording}
+              setStudying={setStudying}
               addOverlay={addOverlay}
               addAlert={addAlert}
             />
@@ -92,10 +120,22 @@ export default function Home() {
         </div>
       </main>
       {overlay && (
-        <div className='overlay'>
+        <div className='overlay justify-content-center align-items-center'>
           <div className='bg-secondary bg-opacity-50 opacity-75 rounded p-3'>
             <h2>{overlay}</h2>
           </div>
+        </div>
+      )}
+      {alerts.length && (
+        <div className='overlay flex-column justify-content-start align-items-center'>
+          {alerts.map((alert, idx) => (
+            <div
+              key={`alert-${idx}`}
+              className={`bg-${alert.type} d-flex align-items-center p-2 rounded my-2 bg-opacity-75`}
+            >
+              <p className='m-0 p-0'>{`${alert.message}`}</p>
+            </div>
+          ))}
         </div>
       )}
     </>

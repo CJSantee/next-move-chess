@@ -1,4 +1,6 @@
 import api from "../core/api";
+import { Chess } from "chess.js";
+import { positionToShortFen, shortenFen } from "./utils/positions";
 
 const cache = new Map();
 
@@ -11,8 +13,7 @@ const cache = new Map();
 export const getPosition = async ({ fen }) => {
   let queryString = "";
   if (fen) {
-    const shortenedFen = fen.split(" ").slice(0, 2).join(" ");
-    queryString = `?fen=${shortenedFen}`;
+    queryString = `?fen=${shortenFen(fen)}`;
   }
   const uri = `/positions${queryString}`;
 
@@ -49,10 +50,7 @@ export const updatePositionById = async ({ id, name, book_moves }) => {
     console.error(error);
   }
   if (success) {
-    const uri = `/positions?fen=${[
-      dbPosition.piece_placement,
-      dbPosition.active_color,
-    ].join(" ")}`;
+    const uri = `/positions?fen=${positionToShortFen(dbPosition)}`;
     cache.set(uri, dbPosition);
   }
   return {
@@ -76,14 +74,35 @@ export const postPosition = async (position) => {
     console.error(error);
   }
   if (success) {
-    const uri = `/positions?fen=${[
-      dbPosition.piece_placement,
-      dbPosition.active_color,
-    ].join(" ")}`;
+    const uri = `/positions?fen=${positionToShortFen(dbPosition)}`;
     cache.set(uri, dbPosition);
   }
   return {
     position: dbPosition,
     success,
+  };
+};
+
+/**
+ * @description Gets next position after a random book_move
+ * @param {string} fen
+ * @param {Array} book_moves
+ * @returns
+ */
+export const getRandomAfterBookMove = async (fen, book_moves) => {
+  if (!book_moves.length) {
+    throw new Error("No Book Moves found for this position.");
+  }
+  const game = new Chess();
+  game.load(fen);
+  const move = book_moves[Math.floor(Math.random() * book_moves.length)];
+  game.move(move);
+  const position = await getPosition({ fen: game.fen() });
+  if (!position) {
+    throw new Error(`Book Move ${move} does not have a matching position.`);
+  }
+  return {
+    position,
+    move,
   };
 };
