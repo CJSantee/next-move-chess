@@ -16,7 +16,7 @@ import ConfirmModal from "./ConfirmModal";
 import { useState, useEffect } from "react";
 // Services
 import { updatePositionById, getRandomAfterBookMove } from "../lib/positions";
-import { PositionName } from "./PositionName";
+import OpeningName from "./OpeningName";
 
 function GamePanel({
   game,
@@ -41,6 +41,10 @@ function GamePanel({
     }
   }, [position]);
 
+  /**
+   * @description Moves Book Move at index up in position
+   * @param {number} index
+   */
   const reorderUp = (index) => {
     if (index === 0) {
       return;
@@ -52,6 +56,10 @@ function GamePanel({
     setBookMoves(bookMovesCopy);
   };
 
+  /**
+   * @description Moves Book Move at index down in position
+   * @param {number} index
+   */
   const reorderDown = (index) => {
     if (index === bookMoves.length - 1) {
       return;
@@ -63,6 +71,9 @@ function GamePanel({
     setBookMoves(bookMovesCopy);
   };
 
+  /**
+   * @description Removes Book Move from position
+   */
   const removeBookMove = async () => {
     const bookMovesCopy = [...bookMoves];
     bookMovesCopy.splice(confirmDelete, 1);
@@ -71,6 +82,10 @@ function GamePanel({
     setConfirmDelete(null);
   };
 
+  /**
+   * @description Saves changes in position order to db
+   * @returns {boolean} Success
+   */
   const savePositionChanges = async () => {
     const { success } = await updatePositionById({
       id: position?._id,
@@ -80,6 +95,9 @@ function GamePanel({
     return success;
   };
 
+  /**
+   * @description Gets random position name after 1 book move and updates studying value.
+   */
   const study = async () => {
     try {
       const { position: nextPosition, move } = await getRandomAfterBookMove(
@@ -96,12 +114,7 @@ function GamePanel({
   return (
     <>
       <div className='flex-fill mx-3 my-2'>
-        <PositionName
-          position={position}
-          onUpdate={(name) => setPosition({ ...position, name })}
-          addAlert={addAlert}
-          fen={game.fen()}
-        />
+        <OpeningName game={game} addAlert={addAlert} />
         <div className='card p-2'>
           <div className='d-flex justify-content-between align-items-center pt-1 pb-3'>
             <p className='m-0'>Book Moves</p>
@@ -198,7 +211,7 @@ function GamePanel({
         </div>
       </div>
       <ConfirmModal
-        show={confirmDelete}
+        show={confirmDelete !== null}
         onHide={() => {
           setConfirmDelete(null);
         }}

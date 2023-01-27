@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const MoveSchema = new mongoose.Schema({
   white: {
     type: String,
+    required: true,
   },
   black: {
     type: String,
@@ -18,6 +19,11 @@ const OpeningSchema = new mongoose.Schema({
     type: [MoveSchema],
     required: true,
   },
+  fen: {
+    type: String,
+    required: true,
+  },
 });
 
-module.exports = Opening = mongoose.model("opening", OpeningSchema);
+export default mongoose.models.Opening ||
+  mongoose.model("Opening", OpeningSchema);

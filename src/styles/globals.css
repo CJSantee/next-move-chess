@@ -35,3 +35,11 @@ html,
 .min-w-max-content {
   min-width: max-content;
 }
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.hover-underline:hover {
+  text-decoration: underline;
+}

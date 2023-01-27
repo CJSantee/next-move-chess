@@ -26,7 +26,7 @@ export const getPosition = async ({ fen }) => {
     data: [position],
     success,
     error,
-  } = await api.get(`/positions${queryString}`);
+  } = await api.get(uri);
   if (success) {
     cache.set(uri, position);
   } else {
